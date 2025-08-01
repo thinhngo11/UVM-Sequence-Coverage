@@ -1,92 +1,101 @@
-// checking not and yes as well
-// many repeat starts
-//clock independent - time abstration only order
-class seq_covergroup extends uvm_subscriber#(seq_item);
+class seq_covergroup extends uvm_scoreboard;
   `uvm_component_utils(seq_covergroup)
  
-  seq_coverpoint cpseq8RRWW; //coverpoint 
-  seq_covercross ccseq; //covercross
+  localparam logic READ = 1'b1;
+  localparam logic WRITE = 1'b0;
+  localparam int TENBI2C = 8;
+  localparam int FOURBI2C = 4;
+  
+  seq_coverpoint A;
+  seq_coverpoint B;
+  seq_covercross C; 
   
   uvm_analysis_imp #(seq_item,seq_covergroup) scport;
+
   function new(string name="seq_covergroup", uvm_component parent=null);
     super.new(name,parent);
   endfunction
 
-  function void create_cpseq8RRWW();
+  function void create_A();
     seq_item s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b1;
-    s.slv_addr = 8;
-    cpseq8RRWW.make(s); 
+    s.rd_wr = READ;
+    s.slv_addr = TENBI2C;
+    A.make(s); 
     s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b1;
-    s.slv_addr = 8;    
-    cpseq8RRWW.make(s); 
+    s.rd_wr = WRITE;
+    s.slv_addr = TENBI2C;    
+    A.make(s);
     s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b0;
-    s.slv_addr = 8;    
-    cpseq8RRWW.make(s);
-/*    s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b0;
-    s.slv_addr = 8;    
-    cpseq8RRWW.make(s); */
+    s.rd_wr = WRITE;
+    s.slv_addr = TENBI2C;    
+    A.make(s); 
     
-    cpseq8RRWW.display();
+    A.display();
   endfunction
 
-  function void create_ccseq();
+  function void create_B();
     seq_item s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b1;
-    s.slv_addr = 8;
-    ccseq.make1(s); 
+    s.rd_wr = WRITE;
+    s.slv_addr = FOURBI2C;
+    B.make(s); 
     s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b1;
-    s.slv_addr = 8;    
-    ccseq.make1(s); 
+    s.rd_wr = READ;
+    s.slv_addr = FOURBI2C;    
+    B.make(s); 
     s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b0;
-    s.slv_addr = 8;    
-    ccseq.make1(s);
+    s.rd_wr = READ;
+    s.slv_addr = TENBI2C;    
+    B.make(s);
+    
+    A.display();
+  endfunction
+
+  function void create_C();
+    seq_item s = seq_item::type_id::create("s");
+    s.rd_wr = READ;
+    s.slv_addr = TENBI2C;
+    C.make1(s); 
+    s = seq_item::type_id::create("s");
+    s.rd_wr = READ;
+    s.slv_addr = TENBI2C;    
+    C.make1(s); 
+    s = seq_item::type_id::create("s");
+    s.rd_wr = WRITE;
+    s.slv_addr = TENBI2C;    
+    C.make1(s);
     
     s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b0;
-    s.slv_addr = 4;    
-    ccseq.make2(s);
+    s.rd_wr = WRITE;
+    s.slv_addr = FOURBI2C;    
+    C.make2(s);
     s = seq_item::type_id::create("s");
-    s.rd_wr = 1'b0;
-    s.slv_addr = 4;    
-    ccseq.make2(s); 
+    s.rd_wr = WRITE;
+    s.slv_addr = FOURBI2C;    
+    C.make2(s); 
     
-    ccseq.display();
+    C.display();
   endfunction
 
   function void build_phase(uvm_phase phase);
     scport=new("Seq coverage port",this);
-    cpseq8RRWW = seq_coverpoint::type_id::create("cpseq8RRWW");
-    ccseq = seq_covercross::type_id::create("ccseq");    
-    //create_cpseq8RRWW();
-    create_ccseq();
+    A = seq_coverpoint::type_id::create("A");
+    B = seq_coverpoint::type_id::create("B");
+    C = seq_covercross::type_id::create("C");    
+    create_A();
+    create_B();
+    create_C();
   endfunction
   
-  // update coverage on every sampled transaction
+  //update coverage on every sampled transaction
   function void write(seq_item t);
-    seq_item t1 = seq_item::type_id::create("t1");
-    seq_item t2 = seq_item::type_id::create("t2");
-    t1.copy(t);
-    t2.copy(t);
-    //cpseq8RRWW.update(t1);
-    ccseq.update(t2);
+    A.update(t);
+    B.update(t);
+    C.update(t);
   endfunction
   
-  //cover cross of sequences: like and of SVA 
-  //a and b → a and b must hold in the same period
-  // start the same time end the same time
-
-  //throughout a true throughout b
-  // two arguments first
-  // same transaction type -> no parallel sequences
-  // within a true within b seq1 within seq2 → seq1 must occur inside seq2
   function void report_phase(uvm_phase phase);
-    //cpseq8RRWW.report();
-    ccseq.report();
+    A.cseq_report();
+    B.cseq_report();
+    C.cseq_report();
   endfunction
 endclass
