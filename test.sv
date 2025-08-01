@@ -2,7 +2,9 @@ class test extends uvm_test;
   `uvm_component_utils(test)
   
   environment env;
-  seq 				sqrn;	// random
+  seq 				sqrn0;	// random
+  seq1 				sqrn1;	// random
+
   seq_7bit 			sq7;	// 7bit slave
   seq_10bit 		sq10;	// 10bit slave
   seq_rpt_start 	sqrpt;	// repeated start
@@ -24,7 +26,9 @@ class test extends uvm_test;
   
   virtual task run_phase(uvm_phase phase);
     
-    sqrn   = seq				::type_id::create();	// random
+    sqrn0   = seq				::type_id::create();	// random
+    sqrn1   = seq1				::type_id::create();	// random
+
     sq7    = seq_7bit			::type_id::create();	// 7bit slave
     sq10   = seq_10bit			::type_id::create();	// 10bit slave
     sqrpt  = seq_rpt_start		::type_id::create();	// repeated start
@@ -36,8 +40,9 @@ class test extends uvm_test;
     sqdr   = seq_directed		::type_id::create();	// directed test
     
     phase.raise_objection(this);
-    
-    sqrn.   start(env.ag.sqnr);	// random
+
+    fork 
+      sqrn0.   start(env.ag0.sqnr);	// random
 /*    sq7.    start(env.ag.sqnr);	// 7bit slave
     sq10.   start(env.ag.sqnr);	// 10bit slave
     sqrpt.  start(env.ag.sqnr);	// repeated start
@@ -49,6 +54,9 @@ class test extends uvm_test;
 
     sqdr.q=env.sb.q;
     sqdr.   start(env.ag.sqnr);	// directed test */
+    
+      sqrn1.   start(env.ag1.sqnr);	// random
+    join 
     phase.drop_objection(this);
   endtask
   
